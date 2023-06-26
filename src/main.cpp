@@ -3,18 +3,28 @@
 #include <cmath>
 #include <algorithm>
 
+#define UNITS_TO_KMH 25
 #define SCREEN_WIDTH (1536)
 #define SCREEN_HEIGHT (864)
 #define CENTER_WIDTH (SCREEN_WIDTH / 2)
 #define CENTER_HEIGHT (SCREEN_HEIGHT / 2)
 
-const float scale = SCREEN_WIDTH / 192, maxSpeed = 4.0f;
+const float scale = SCREEN_WIDTH / 192, maxSpeed = 4.8f;
 float scrollingBack = 0.0f, scrollingMid = 0.0f, scrollingFore = 0.0f, metersDriven = 0.0f, speed = 1.0f;
+Camera2D camera = {0};
 Sound beep = {0}, brakeSound = {0};
 Texture2D uiHint = {0};
 Font font = {0};
 
-void UpdateSpeed()
+void InitCamera()
+{
+    camera.target = { CENTER_WIDTH, CENTER_HEIGHT };
+    camera.offset = { 0, CENTER_HEIGHT };
+    camera.rotation = 0.0f;
+    camera.zoom = 1.0f;
+}
+
+void UpdateTrainSpeed()
 {
     if (IsKeyDown(KEY_UP) && speed < maxSpeed)
     {
@@ -33,9 +43,9 @@ void UpdateSpeed()
 
 void DrawUI()
 {
-    std::string speedText = std::to_string((int)std::floor(speed * 25)) + " KM/H";
+    std::string speedText = std::to_string((int)std::floor(speed * UNITS_TO_KMH)) + " KM/H";
     std::string metersText = std::to_string((int)std::floor(metersDriven)) + " M";
-    // x coordinate at which the game should start drawing the rectangle;
+
     // acts as a reference point for ui elements
     const float rx = CENTER_WIDTH - 160;
 
@@ -62,6 +72,7 @@ int main(void)
     font = LoadFont("resources/common/fonts/pixeloid.ttf");
 
     SetTargetFPS(60);
+    InitCamera();
     SetSoundVolume(beep, 0.6f);
     SetMusicVolume(bgm, 0.75f);
     PlayMusicStream(bgm);
@@ -69,18 +80,19 @@ int main(void)
     while (!WindowShouldClose())
     {
         UpdateMusicStream(bgm);
-        UpdateSpeed();
+        UpdateTrainSpeed();
         if(IsKeyPressed(KEY_F1))
         { 
             PlaySound(beep);
             drawUI = !drawUI;
         }
 
-        //                      25 * 0.277777 (km/h to m/s)
-        metersDriven += speed * 6.944445f * GetFrameTime();
-        scrollingBack -= 0.025f * scale * speed * GetFrameTime() * 60;
-        scrollingMid -= 0.25f * scale * speed * GetFrameTime() * 60;
-        scrollingFore -= 0.75f * scale * speed * GetFrameTime() * 60;
+        metersDriven += 0.277777 * speed * UNITS_TO_KMH * GetFrameTime();
+        scrollingBack -= 1.2f * scale * speed * GetFrameTime();
+        scrollingMid -= 18.0f * scale * speed * GetFrameTime();
+        scrollingFore -= 48.0f * scale * speed * GetFrameTime();
+
+        
 
         // scroll to the next image to create a seamless scrolling effect
         if (scrollingBack <= -background.width * scale)
@@ -94,17 +106,19 @@ int main(void)
         BeginDrawing();
             ClearBackground(BLACK);
 
-            // background
-            DrawTextureEx(background, (Vector2){scrollingBack, 0}, 0.0f, scale, WHITE);
-            DrawTextureEx(background, (Vector2){background.width * scale + scrollingBack, 0}, 0.0f, scale, WHITE);
+            BeginMode2D(camera);
+                // background
+                DrawTextureEx(background, (Vector2){scrollingBack, 0}, 0.0f, scale, WHITE);
+                DrawTextureEx(background, (Vector2){background.width * scale + scrollingBack, 0}, 0.0f, scale, WHITE);
 
-            // midground
-            DrawTextureEx(midground, (Vector2){scrollingMid, 0}, 0.0f, scale, LIGHTGRAY);
-            DrawTextureEx(midground, (Vector2){midground.width * scale + scrollingMid, 0}, 0.0f, scale, LIGHTGRAY);
+                // midground
+                DrawTextureEx(midground, (Vector2){scrollingMid, 0}, 0.0f, scale, LIGHTGRAY);
+                DrawTextureEx(midground, (Vector2){midground.width * scale + scrollingMid, 0}, 0.0f, scale, LIGHTGRAY);
 
-            // foreground
-            DrawTextureEx(foreground, (Vector2){scrollingFore, 0}, 0.0f, scale, WHITE);
-            DrawTextureEx(foreground, (Vector2){foreground.width * scale + scrollingFore, 0}, 0.0f, scale, WHITE);
+                // foreground
+                DrawTextureEx(foreground, (Vector2){scrollingFore, 0}, 0.0f, scale, WHITE);
+                DrawTextureEx(foreground, (Vector2){foreground.width * scale + scrollingFore, 0}, 0.0f, scale, WHITE);
+            EndMode2D();
 
             if(drawUI)
             {
