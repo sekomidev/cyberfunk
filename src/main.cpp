@@ -3,13 +3,13 @@
 #include <cmath>
 #include <algorithm>
 
-#define UNITS_TO_KMH 25
+#define UNITS_TO_KMH 20
 #define SCREEN_WIDTH (1536)
 #define SCREEN_HEIGHT (864)
 #define CENTER_WIDTH (SCREEN_WIDTH / 2)
 #define CENTER_HEIGHT (SCREEN_HEIGHT / 2)
 
-const float scale = SCREEN_WIDTH / 192, maxSpeed = 4.8f;
+const float scale = SCREEN_WIDTH / 192, maxSpeed = 4.5f;
 float scrollingBack = 0.0f, scrollingMid = 0.0f, scrollingFore = 0.0f, metersDriven = 0.0f, speed = 1.0f;
 Camera2D camera = {0};
 Sound beep = {0}, brakeSound = {0};
@@ -88,19 +88,17 @@ int main(void)
         }
 
         metersDriven += 0.277777 * speed * UNITS_TO_KMH * GetFrameTime();
-        scrollingBack -= 1.2f * scale * speed * GetFrameTime();
-        scrollingMid -= 18.0f * scale * speed * GetFrameTime();
-        scrollingFore -= 48.0f * scale * speed * GetFrameTime();
+        scrollingBack -= 1.0f * scale * speed * GetFrameTime();
+        scrollingMid -= 14.0f * scale * speed * GetFrameTime();
+        scrollingFore -= 46.0f * scale * speed * GetFrameTime();
 
-        
-
-        // scroll to the next image to create a seamless scrolling effect
+        // creates a seamless scrolling effect
         if (scrollingBack <= -background.width * scale)
-            scrollingBack = 0;
+            scrollingBack += background.width * scale;
         if (scrollingMid <= -midground.width * scale)
-            scrollingMid = 0;
+            scrollingMid += midground.width * scale;
         if (scrollingFore <= -foreground.width * scale)
-            scrollingFore = 0;
+            scrollingFore += foreground.width * scale;
 
         // drawing
         BeginDrawing();
